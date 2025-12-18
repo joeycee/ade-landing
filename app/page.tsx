@@ -488,7 +488,7 @@ export default function Home() {
       <Divider />
 
       {/* HOW IT WORKS */}
-      <section id="how" className="mx-auto max-w-6xl px-4">
+      <section id="how" className="relative overflow-hidden bg-[#051947] py-16">
         <div className="rounded-3xl border border-black/10 bg-white p-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
@@ -543,7 +543,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        {/* <div className="mt-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-3xl border border-black/10 bg-white p-7">
             <div className="text-sm font-semibold">Launch</div>
             <div className="mt-2 text-4xl font-semibold tracking-tight text-[#051947]">$0</div>
@@ -606,13 +606,13 @@ export default function Home() {
 
         <p className="mt-4 text-xs text-black/50">
           Pricing is placeholder — we’ll set final plans when you’re ready.
-        </p>
+        </p> */}
       </section>
 
       <Divider />
 
       {/* FAQ + CTA */}
-      <section id="faq" className="mx-auto max-w-6xl px-4">
+      <section id="faq" className="relative overflow-hidden bg-[#051947] py-16">
         <div className="rounded-3xl border border-black/10 bg-white p-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
