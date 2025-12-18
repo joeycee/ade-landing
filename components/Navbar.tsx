@@ -34,12 +34,13 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             {/* logo.png */}
-            <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white border border-black/10">
+            <div className="flex items-center gap-2 shrink-0 group bg-transparent">
               <Image
                 src="/logo.png"
-                alt="Ade logo"
-                fill
-                className="object-contain p-1"
+                alt={`Ade logo`}
+                width={54}
+                height={54}
+                className="object-contain"
                 priority
               />
             </div>
