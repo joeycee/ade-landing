@@ -174,7 +174,6 @@ export default function ContactPage() {
     formDataRef.current = { name, email, message };
 
     try {
-      window.greccaptcha?.execute(widgetIdRef.current); // (typo guard, won't run)
       window.grecaptcha.execute(widgetIdRef.current);
     } catch (err) {
       console.error("reCAPTCHA execute error:", err);
