@@ -1,7 +1,7 @@
 // app/contact/page.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
@@ -11,15 +11,15 @@ declare global {
     grecaptcha?: {
       ready: (cb: () => void) => void;
       render: (
-        container: string | HTMLElement,
+        container: HTMLElement,
         params: {
           sitekey: string;
           callback: (token: string) => void;
-          size: string;
+          size: "invisible";
         }
       ) => number;
-      execute: (widgetId?: number) => void;
-      reset: (widgetId?: number) => void;
+      execute: (widgetId: number) => void;
+      reset: (widgetId: number) => void;
     };
   }
 }
@@ -29,8 +29,10 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [recaptchaReady, setRecaptchaReady] = useState(false);
+
   const recaptchaRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<number | null>(null);
+
   const formDataRef = useRef<{
     name: string;
     email: string;
@@ -38,98 +40,104 @@ export default function ContactPage() {
   } | null>(null);
 
   useEffect(() => {
-    // Cleanup on unmount
     return () => {
+      // Cleanup on unmount
       if (widgetIdRef.current !== null && window.grecaptcha) {
-        window.grecaptcha.reset(widgetIdRef.current);
+        try {
+          window.grecaptcha.reset(widgetIdRef.current);
+        } catch {
+          // ignore
+        }
       }
     };
   }, []);
 
   const onRecaptchaLoad = () => {
-    console.log("📜 reCAPTCHA script loaded");
-    console.log("🔑 Site key exists:", !!RECAPTCHA_SITE_KEY);
-    console.log("🌐 grecaptcha available:", !!window.grecaptcha);
-    console.log("📍 Ref exists:", !!recaptchaRef.current);
-    
-    if (!window.grecaptcha || !recaptchaRef.current || !RECAPTCHA_SITE_KEY) {
-      console.error("❌ Missing reCAPTCHA requirements");
+    if (!RECAPTCHA_SITE_KEY) {
+      setError("reCAPTCHA is not configured.");
+      return;
+    }
+    if (!window.grecaptcha) {
+      setError("reCAPTCHA failed to load.");
+      return;
+    }
+    if (!recaptchaRef.current) {
+      setError("reCAPTCHA container not found.");
       return;
     }
 
     window.grecaptcha.ready(() => {
-      console.log("✅ reCAPTCHA ready callback fired");
       if (!window.grecaptcha || !recaptchaRef.current) return;
 
       try {
+        // Render invisible widget explicitly
         widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: RECAPTCHA_SITE_KEY,
           callback: handleRecaptchaCallback,
           size: "invisible",
         });
-        console.log("✅ reCAPTCHA widget rendered, ID:", widgetIdRef.current);
+
         setRecaptchaReady(true);
-      } catch (err) {
-        console.error("❌ reCAPTCHA render error:", err);
+      } catch (e) {
+        console.error("reCAPTCHA render error:", e);
         setError("Failed to initialize reCAPTCHA.");
       }
     });
   };
 
   const handleRecaptchaCallback = async (token: string) => {
-    if (!formDataRef.current) {
+    const payload = formDataRef.current;
+
+    if (!payload) {
       setLoading(false);
       return;
     }
 
-    const { name, email, message } = formDataRef.current;
-
     try {
-      console.log("Submitting to API...");
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message, recaptchaToken: token }),
+        body: JSON.stringify({
+          ...payload,
+          recaptchaToken: token,
+        }),
       });
 
-      console.log("Response status:", res.status);
-      console.log("Response ok:", res.ok);
-
-      let data;
+      let data: any = {};
       try {
         data = await res.json();
-        console.log("Response data:", data);
-      } catch (parseErr) {
-        console.error("Failed to parse JSON:", parseErr);
-        data = {};
+      } catch {
+        // ignore
       }
 
-      // Check if response is successful
-      if (res.ok && data.success) {
-        console.log("Form submitted successfully!");
+      if (res.ok && data?.success) {
         setSent(true);
         setError("");
-        // Reset form
-        const form = document.querySelector("form") as HTMLFormElement;
-        if (form) form.reset();
+
+        const form = document.querySelector("form") as HTMLFormElement | null;
+        form?.reset();
       } else {
-        console.error("Contact API error:", data);
-        setError(data.error || data.message || "Something went wrong. Please try again.");
+        setError(data?.error || data?.message || "Something went wrong. Please try again.");
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error(err);
       setError("Unexpected error. Please try again.");
     } finally {
       setLoading(false);
       formDataRef.current = null;
+
       // Reset reCAPTCHA for next submission
       if (widgetIdRef.current !== null && window.grecaptcha) {
-        window.grecaptcha.reset(widgetIdRef.current);
+        try {
+          window.grecaptcha.reset(widgetIdRef.current);
+        } catch {
+          // ignore
+        }
       }
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setSent(false);
@@ -139,24 +147,23 @@ export default function ContactPage() {
       return;
     }
 
-    if (!recaptchaReady) {
+    if (!recaptchaReady || !window.grecaptcha || widgetIdRef.current === null) {
       setError("Please wait for reCAPTCHA to load.");
       return;
     }
 
     const form = e.currentTarget;
-    const formData = new FormData(form);
-    const name = String(formData.get("name") || "").trim();
-    const email = String(formData.get("email") || "").trim();
-    const message = String(formData.get("message") || "").trim();
+    const fd = new FormData(form);
 
-    // Validation
+    const name = String(fd.get("name") || "").trim();
+    const email = String(fd.get("email") || "").trim();
+    const message = String(fd.get("message") || "").trim();
+
     if (!name || !email || !message) {
       setError("Please fill out all fields.");
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address.");
@@ -164,27 +171,13 @@ export default function ContactPage() {
     }
 
     setLoading(true);
-
-    // Store form data for callback
     formDataRef.current = { name, email, message };
 
-    // Execute reCAPTCHA
     try {
-      console.log("🎯 Attempting to execute reCAPTCHA...");
-      console.log("Widget ID:", widgetIdRef.current);
-      console.log("grecaptcha exists:", !!window.grecaptcha);
-      
-      if (!window.grecaptcha || widgetIdRef.current === null) {
-        setError("reCAPTCHA is not ready. Please try again.");
-        setLoading(false);
-        return;
-      }
-      
-      console.log("🚀 Executing reCAPTCHA widget...");
+      window.greccaptcha?.execute(widgetIdRef.current); // (typo guard, won't run)
       window.grecaptcha.execute(widgetIdRef.current);
-      console.log("✅ Execute called successfully");
     } catch (err) {
-      console.error("❌ reCAPTCHA execution error:", err);
+      console.error("reCAPTCHA execute error:", err);
       setError("reCAPTCHA error. Please refresh and try again.");
       setLoading(false);
     }
@@ -192,20 +185,19 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Load reCAPTCHA v2 script */}
-      {RECAPTCHA_SITE_KEY && (
+      {/* Load reCAPTCHA v2 script with explicit render */}
+      {RECAPTCHA_SITE_KEY ? (
         <Script
-          src="https://www.google.com/recaptcha/api.js"
+          src="https://www.google.com/recaptcha/api.js?render=explicit"
           strategy="afterInteractive"
           onLoad={onRecaptchaLoad}
         />
-      )}
+      ) : null}
 
       <div className="max-w-xl mx-auto px-6 py-16">
         <h1 className="text-3xl font-bold mb-3">Contact us</h1>
         <p className="text-sm text-slate-600 mb-8">
-          Questions, feedback or ideas? Flick us a message and we&apos;ll come
-          back to you.
+          Questions, feedback or ideas? Flick us a message and we&apos;ll come back to you.
         </p>
 
         {sent && (
@@ -220,10 +212,7 @@ export default function ContactPage() {
         )}
 
         {error && (
-          <div
-            className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
-            role="alert"
-          >
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
@@ -272,7 +261,12 @@ export default function ContactPage() {
           </div>
 
           {/* Invisible reCAPTCHA container */}
-          <div ref={recaptchaRef}></div>
+          <div
+            id="recaptcha-container"
+            ref={recaptchaRef}
+            className="h-0 overflow-hidden"
+            aria-hidden="true"
+          />
 
           <button
             type="submit"
