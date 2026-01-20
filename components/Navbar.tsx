@@ -5,10 +5,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const nav = [
-  { label: "Features", href: "/#features" },
-  { label: "How it works", href: "/#how" },
-  { label: "Contact", href: "/contact" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "Features", href: "https://ade.co.nz/#features" },
+  { label: "How it works", href: "https://ade.co.nz/#how" },
+  { label: "Contact", href: "https://ade.co.nz/contact" },
+  { label: "FAQ", href: "https://ade.co.nz/#faq" },
 ];
 
 export default function Navbar() {
@@ -64,7 +64,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <a
-              href="mailto:hello@ade.co.nz"
+              href="https://ade.co.nz/contact"
               className="hidden sm:inline-flex rounded-xl px-3 py-2 text-sm font-medium text-black/70 hover:text-black hover:bg-black/5 transition"
             >
               Contact
