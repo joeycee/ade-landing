@@ -49,15 +49,15 @@ export default function Footer() {
           </div>
 
           <div className="rounded-2xl border border-black/10 p-5 bg-gradient-to-b from-black/[0.02] to-transparent">
-            <div className="text-sm font-semibold">Get early access</div>
+            <div className="text-sm font-semibold">Need help onboarding?</div>
             <p className="mt-2 text-sm text-black/60">
               Want Ade tailored to your workflow? Tell us your trade and we’ll onboard you.
             </p>
             <a
-              href="mailto:hello@ade.co.nz?subject=Ade%20early%20access"
+              href="mailto:enquiries@ade.co.nz"
               className="mt-4 inline-flex w-full justify-center rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90 transition"
             >
-              Request access
+              Request onboarding
             </a>
           </div>
         </div>
