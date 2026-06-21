@@ -569,9 +569,9 @@ export default function Home() {
                 Claim a free spot
                 <Icon name="arrow" className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="mailto:enquiries@ade.co.nz?subject=Ade%20onboarding" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/12 transition backdrop-blur">
+              <a href="mailto:enquiries@ade.co.nz" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/8 px-8 py-3.5 text-sm font-semibold text-white hover:bg-white/12 transition backdrop-blur">
                 <Icon name="mail" className="h-4 w-4" />
-                Email us
+                Request onboarding
               </a>
             </div>
           </div>
